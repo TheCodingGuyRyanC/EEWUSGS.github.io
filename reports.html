@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Latest Earthquake Reports</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #e0f7fa;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: #333;
+            overflow: hidden;
+        }
+        .container {
+            background: #ffffff;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 800px;
+            padding: 30px;
+            text-align: center;
+            overflow-y: auto;
+            max-height: 90vh;
+        }
+        .header {
+            font-size: 28px;
+            font-weight: 700;
+            color: #00796b;
+            margin-bottom: 20px;
+        }
+        .info {
+            font-size: 18px;
+            margin: 20px 0;
+        }
+        .refresh-btn {
+            background: #00796b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+        }
+        .refresh-btn:hover {
+            background: #004d40;
+        }
+        .earthquake-report {
+            text-align: left;
+            margin-top: 20px;
+        }
+        .earthquake-item {
+            background: #f1f8e9;
+            border: 1px solid #c5e1a5;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            transition: background 0.3s;
+        }
+        .earthquake-item:hover {
+            background: #aed581;
+        }
+        .earthquake-item strong {
+            display: block;
+            margin-bottom: 5px;
+            color: #33691e;
+        }
+        .menu {
+            background: #00796b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        .menu a:hover {
+            color: #aed581;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="menu">
+            <a href="#home">Home</a>
+            <a href="#reports">Reports</a>
+            <a href="#alerts">Alerts</a>
+            <a href="#settings">Settings</a>
+        </div>
+        <div class="header">Latest Earthquake Reports</div>
+        <div class="info">Realtime USGS Earthquake Reports</div>
+        <div class="earthquake-report" id="earthquakeReport"></div>
+        <button class="refresh-btn" onclick="fetchEarthquakeReports()">Refresh</button>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            fetchEarthquakeReports();
+        });
+
+        function fetchEarthquakeReports() {
+            const earthquakeReport = document.getElementById('earthquakeReport');
+            earthquakeReport.innerHTML = 'Fetching latest earthquake data...';
+
+            fetch('https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_day.geojson')
+                .then(response => response.json())
+                .then(data => {
+                    earthquakeReport.innerHTML = '';
+
+                    const features = data.features;
+                    if (features.length > 0) {
+                        features.forEach(feature => {
+                            const { place, mag, time, url } = feature.properties;
+                            const date = new Date(time);
+
+                            const earthquakeItem = document.createElement('a');
+                            earthquakeItem.classList.add('earthquake-item');
+                            earthquakeItem.href = url;
+                            earthquakeItem.target = '_blank';
+
+                            earthquakeItem.innerHTML = `
+                                <div><strong>Magnitude: ${mag}</strong></div>
+                                <div>Location: ${place}</div>
+                                <div>Time: ${date.toLocaleString()}</div>
+                            `;
+                            earthquakeReport.appendChild(earthquakeItem);
+                        });
+                    } else {
+                        earthquakeReport.innerHTML = '<p>No recent earthquakes recorded.</p>';
+                    }
+                })
+                .catch(error => {
+                    earthquakeReport.innerHTML = '<p>Error fetching earthquake data. Please try again later.</p>';
+                });
+        }
+    </script>
+</body>
+</html>

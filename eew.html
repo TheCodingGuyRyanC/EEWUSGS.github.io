@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Realtime Earthquake Early Warning</title>
+    <!-- Include Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+    <style>
+        /* Set map container height */
+        #map {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        #earthquake-info {
+            font-size: 18px;
+            color: #007bff;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .btn {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Realtime Earthquake Early Warning</h1>
+        <div id="map"></div>
+        <div id="earthquake-info"></div>
+        <form id="location-form">
+            <div class="form-group">
+                <label for="latitude">Latitude:</label>
+                <input type="text" id="latitude" name="latitude" placeholder="Enter latitude">
+            </div>
+            <div class="form-group">
+                <label for="longitude">Longitude:</label>
+                <input type="text" id="longitude" name="longitude" placeholder="Enter longitude">
+            </div>
+            <button type="submit" class="btn">Set Location</button>
+        </form>
+    </div>
+
+    <!-- Include Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        var map = L.map('map').setView([0, 0], 2); // Centered at 0, 0
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        var epicenterIcon = L.divIcon({
+            className: 'epicenter-icon',
+            html: '<div>x</div>'
+        });
+
+        var epicenterMarker = L.marker([0, 0], { icon: epicenterIcon }).addTo(map);
+
+        var pWaveMarker = L.circleMarker([0, 0], {
+            color: 'blue',
+            fillColor: 'blue',
+            fillOpacity: 0.5,
+            radius: 10 // Initial radius (in pixels)
+        }).addTo(map);
+
+        var sWaveMarker = L.circleMarker([0, 0], {
+            color: 'red',
+            fillColor: 'red',
+            fillOpacity: 0.5,
+            radius: 10 // Initial radius (in pixels)
+        }).addTo(map);
+
+        function fetchEarthquakeData() {
+            fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_hour.geojson")
+                .then(response => response.json())
+                .then(data => {
+                    if (data.features.length > 0) {
+                        const { geometry, properties } = data.features[0];
+                        const { mag } = properties;
+                        const { coordinates } = geometry;
+
+                        const earthquakeInfo = document.getElementById('earthquake-info');
+                        earthquakeInfo.innerHTML = `<p>Earthquake Magnitude: ${mag}</p>`;
+
+                        const distance = calculateDistance(coordinates[1], coordinates[0]);
+                        const timeRemaining = calculateTimeRemaining(distance);
+
+                        earthquakeInfo.innerHTML += `<p>Time until waves arrive: ${timeRemaining} minutes</p>`;
+
+                        epicenterMarker.setLatLng([coordinates[1], coordinates[0]]);
+
+                        animateWave(pWaveMarker, coordinates[1], coordinates[0], distance, 2);
+                        animateWave(sWaveMarker, coordinates[1], coordinates[0], distance, 4);
+                    } else {
+                        document.getElementById('earthquake-info').innerHTML = '<p>No earthquakes reported</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error("Error fetching earthquake data:", error);
+                });
+        }
+
+        function calculateDistance(lat, lon) {
+            const userLat = parseFloat(document.getElementById('latitude').value) || 0;
+            const userLon = parseFloat(document.getElementById('longitude').value) || 0;
+            return Math.sqrt((lat - userLat) ** 2 + (lon - userLon) ** 2);
+        }
+
+        function calculateTimeRemaining(distance) {
+            // Simplified calculation: Assuming waves travel at a constant speed
+            // In reality, you would use more accurate methods
+            // Speed of sound in Earth's crust (P-wave): 6 km/s
+            const speedOfPWave = 6; // kilometers per second
+            return Math.round(distance / speedOfPWave * 60); // Convert to minutes
+        }
+
+        function animateWave(marker, lat, lon, distance, speed) {
+            const frames = 60;
+            const interval = 1000; // milliseconds
+            const increment = distance / (speed * frames);
+
+            let counter = 0;
+            const animation = setInterval(() => {
+                if (counter >= frames) {
+                    clearInterval(animation);
+                } else {
+                    const newLat = lat + (increment * (counter + 1));
+                    const newLon = lon;
+                    marker.setLatLng([newLat, newLon]);
+                    counter++;
+                }
+            }, interval);
+        }
+
+        document.getElementById('location-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            fetchEarthquakeData();
+        });
+
+        // Set maximum radius for wave markers to prevent excessive growth when zooming in
+        map.on('zoomend', function() {
+            const maxRadius = 20; // Maximum radius in pixels
+            const zoomLevel = map.getZoom();
+            const scaleFactor = Math.pow(2, zoomLevel - 1);
+            const pWaveRadius = Math.min(maxRadius, 10 / scaleFactor);
+            const sWaveRadius = Math.min(maxRadius, 10 / scaleFactor);
+            pWaveMarker.setRadius(pWaveRadius);
+            sWaveMarker.setRadius(sWaveRadius);
+        });
+    </script>
+</body>
+</html>

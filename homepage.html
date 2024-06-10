@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Earthquake Early Warning System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #e0f7fa;
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .header {
+            font-size: 32px;
+            font-weight: 700;
+            color: #00796b;
+            margin-bottom: 20px;
+        }
+        .intro {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .menu {
+            background: #00796b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+        }
+        .menu a {
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            transition: color 0.3s;
+        }
+        .menu a:hover {
+            color: #aed581;
+        }
+        .btn {
+            background: #00796b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background: #004d40;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">Welcome to the Earthquake Early Warning System</div>
+        <div class="intro">
+            <p>This website provides real-time earthquake reports obtained from the USGS (United States Geological Survey) earthquake data feed. Stay informed about the latest earthquakes and their details.</p>
+        </div>
+        <div class="menu">
+            <a href="reports.html">View Reports</a>
+            <a href="#alerts">Receive Alerts</a>
+            <a href="#settings">Settings</a>
+        </div>
+        <a href="reports.html" class="btn">Explore Earthquake Reports</a>
+    </div>
+</body>
+</html>
